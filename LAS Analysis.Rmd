@@ -1,0 +1,356 @@
+---
+title: "LAS Analysis"
+author: Emily Neer
+output: html_document
+date: "2023-12-05"
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r libraries}
+library(dplyr)
+library(ggplot2)
+library(tidyr)
+library(car)
+library(TOSTER)
+library(irr)
+library(rstatix)
+
+
+#create function for standard error
+se <- function(x){
+  sd(x,na.rm = TRUE)/sqrt(length(x[!is.na(x)]))
+}
+```
+
+```{r load data}
+lasdata <- read.delim("./data/data.txt")
+
+#exclude participants
+lasdata <-lasdata[!(lasdata$id=="114" | lasdata$id=="170" | lasdata$id=="156" | lasdata$id=="108" | lasdata$id=="171"),]
+
+```
+
+Excluding participants: 108 - missing dem data, 114 - parental interference, 156- technical difficulty, 170- participated twice, 171- missing question 10
+
+```{r reliability analysis for scoring of childrens test responses}
+
+#read in data file
+reldat <- read.delim("./data/reliability_dat.txt")
+
+#exclude participants
+reldat <-reldat[!(reldat$id=="114" | reldat$id=="170" | reldat$id=="156" | reldat$id=="108" | reldat$id=="171"),]
+
+newrel <- subset(reldat, select = c("prim", "sec"))
+
+icc(newrel, model= "twoway", type = "agreement", unit = "single")
+
+```
+
+```{r dataframe that averages participants test scores and engagement by condition}
+
+audio <- lasdata[lasdata$cond== 'audio',]
+audio_score <- tapply(audio$propscore, audio$id, mean)
+audio_age <- tapply(audio$age, audio$id, mean)
+audio_engage <- tapply(audio$engage, audio$id, mean)
+print(audio_score)
+
+av <- lasdata[lasdata$cond== 'audiovisual',]
+av_score <- tapply(av$propscore, av$id, mean)
+av_age <- tapply(av$age, av$id, mean)
+av_engage <- tapply(av$engage, av$id, mean)
+print(av_engage)
+print(av_score)
+
+score_column <- c(audio_score, av_score)
+age_column <- c(audio_age, av_age)
+engage_column <- c(audio_engage, av_engage)
+newdat <- data.frame(score_column, age_column, engage_column) 
+
+newdat <- newdat %>%
+  mutate(group = ifelse(row_number() <= length(audio_score), "audio", "av"))
+
+```
+```{r correlation between age and performance}
+
+#scatterplot for scores and age
+ggplot(newdat, aes(x = age_column, y = score_column)) + 
+  geom_point() + 
+  theme_classic() +
+  xlim(7,9) +
+  ylim(0,1)+
+  labs(x = "Age of Participants", y = "Scores") +
+  geom_smooth(method=lm, level = 0.95)
+
+#correlation for scores and age
+cor.test(age_column, score_column, method = "pearson")
+
+```
+```{r engagement analysis by condition}
+
+engage <- lm(engage_column ~ group, data =newdat)
+summary(engage)
+
+confint(engage)
+
+```
+
+```{r difference in age between conditions}
+
+var_lev_age <- leveneTest (age_column ~ group, data = newdat)
+print(var_lev_age)
+
+t.test(audio_age, av_age, var.equal = TRUE)
+
+sd(audio_age)
+sd(av_age)
+
+```
+
+```{r Levenes test and t-test for differences in scores between groups}
+
+#check for unequal variances - result:equal variances 
+var_lev <- leveneTest( score_column~ group, data = newdat)
+print(var_lev)
+
+#t-test by condition 
+t.test(av_score, audio_score, var.equal = TRUE)
+
+sd(av_score)
+```
+
+```{r equivalence test}
+
+mean(av_score)
+sd(av_score)
+mean(audio_score)
+sd(audio_score)
+
+tsum_TOST(m1=0.5465686,m2=0.5285714,sd1=0.1667565,sd2=0.170762,n1=34,n2=35,eqb=0.1, alpha = 0.05, var.equal=TRUE)
+```
+
+Equivalence test is significant. In other words we don't reject the null hypothesis that the means are equivalent.
+
+```{r violin plot for t test analysis, echo = FALSE}
+overall <- newdat %>% 
+  ggplot(aes(x= group, y= score_column, fill = group))+
+  #geom_violin(alpha = 0.4, show.legend = FALSE)+ 
+  geom_boxplot(width=0.5, colour = "black", alpha=0.7 , show.legend = FALSE) +
+  stat_summary(fun.data=mean_se, fun.args = list(mult = 1),
+               geom="pointrange", color="black",
+               shape = 18, size = 0.75,
+               position = position_dodge(width = 0.9))+
+  geom_jitter(shape = 21,size=2,color="black",alpha=1.0 , show.legend = FALSE)+
+  scale_fill_manual(values=c("#05445E","#b84b00"))+
+  coord_fixed(ratio =3.5)  +
+  ylim(0, 1) +
+  labs(x = "Modality", y = "Proportion of Correct Responses (Recall and Transfer)")+
+  theme_classic()+
+  theme(legend.position = "none")+         
+  theme(text = element_text(face = "bold", size = 12)) +
+  theme(axis.text.x = element_text(angle = 0, vjust = 1, hjust=.5,face = "bold", size = 12, color = "black"))
+  
+ggsave("talk.svg", path = ".")
+
+
+```
+
+```{r recall test question comparison}
+
+lasdata_rec <- lasdata[lasdata$qtype == "mem", ]
+audiorec <- lasdata_rec[lasdata_rec$cond== 'audio',]
+audio_score_rec <- tapply(audiorec$propscore, audiorec$id, mean)
+print(audio_score_rec)
+sd(audio_score_rec)
+
+avrec <- lasdata_rec[lasdata_rec$cond== 'audiovisual',]
+av_score_rec <- tapply(avrec$propscore, avrec$id, mean)
+print(av_score_rec)
+sd(av_score_rec)
+
+score_column_rec <- c(audio_score_rec, av_score_rec)
+newdat_rec <- data.frame(score_column_rec) 
+
+newdat_rec <- newdat_rec %>%
+  mutate(group = ifelse(row_number() <= length(audio_score_rec), "audio", "av"))
+
+#check for unequal variances - result:equal variances 
+var_lev_rec <- leveneTest( score_column_rec~ group, data = newdat_rec)
+print(var_lev_rec)
+
+#t-test by condition 
+t.test(av_score_rec, audio_score_rec, var.equal = TRUE)
+```
+
+```{r recall test violin plot, echo = TRUE}
+
+recall <- newdat_rec %>% 
+  ggplot(aes(x= group, y= score_column_rec, fill = group))+
+  #geom_violin(alpha = 0.4, show.legend = FALSE)+ 
+  geom_boxplot(width=0.5, colour = "black", alpha=0.7 , show.legend = FALSE) +
+  stat_summary(fun.data=mean_se, fun.args = list(mult = 1),
+               geom="pointrange", color="black",
+               shape = 18, size = 0.75,
+               position = position_dodge(width = 0.9))+
+  geom_jitter(shape = 21,size=2,color="black",alpha=1.0 , show.legend = FALSE)+
+  scale_fill_manual(values=c("#05445E","#b84b00"))+
+  coord_fixed(ratio =3.5)  +
+  ylim(0, 1) +
+  labs(x = "Modality", y = "Proportion of Correct Recall Test Responses")+
+  theme(
+         panel.background = element_rect(fill='transparent'),
+         plot.background = element_rect(fill='transparent', color=NA),
+         panel.grid.major = element_blank(),
+         panel.grid.minor = element_blank(),
+         legend.background = element_rect(fill='transparent'),
+         legend.box.background = element_rect(fill='transparent')
+       )+
+  theme(legend.position = "none")+         
+  theme(text = element_text(face = "bold", size = 12)) +
+  scale_x_discrete(labels=c('Audio', 'Audiovisual'))+
+  theme(axis.text.x = element_text(angle = 0, vjust = 1, hjust=.5,face = "bold", size = 12, color = "black"))
+
+print(recall)
+
+ggsave("recallplot.png", dpi = 300, bg = "transparent", path = ".")
+```
+
+```{r transfer test question chance and comparison}
+
+n <- 35
+rep <- 1000
+h0 <- cbind(rbinom(n*rep, 1, prob = 1/3), rbinom(n*rep, 1, prob = 1/2),
+            rbinom(n*rep, 1, prob = 1/3), rbinom(n*rep, 1, prob = 1/3), 
+            rbinom(n*rep, 1, prob = 1/3))
+
+h0 <- apply(h0, 1, sum)
+h0 <- matrix(h0, rep)
+h0 <- apply(h0, 1, sum)
+hist(h0)
+
+lasdata_t <- lasdata[lasdata$qtype == "gen", ]
+audiot <- lasdata_t[lasdata_t$cond== 'audio',]
+audio_score_t <- tapply(audiot$propscore, audiot$id, mean)
+print(audio_score_t)
+sd(audio_score_t)
+
+avt <- lasdata_t[lasdata_t$cond== 'audiovisual',]
+av_score_t <- tapply(avt$propscore, avt$id, mean)
+print(av_score_t)
+sd(av_score_t)
+
+score_column_t <- c(audio_score_t, av_score_t)
+newdat_t <- data.frame(score_column_t) 
+
+newdat_t <- newdat_t %>%
+  mutate(group = ifelse(row_number() <= length(audio_score_t), "audio", "av"))
+
+#chance analysis 
+t.test(av_score_t, mu= 11/30, alt = "g")
+t.test(audio_score_t, mu= 11/30, alt = "g")
+
+#check for unequal variances - result:equal variances 
+var_lev_t <- leveneTest( score_column_t~ group, data = newdat_t)
+print(var_lev_t)
+
+#t-test by condition 
+t.test(av_score_t, audio_score_t, var.equal = TRUE)
+```
+```{r transfer test violin plot, echo = FALSE}
+
+transfer <- newdat_t %>% 
+  ggplot(aes(x= group, y= score_column_t, fill = group))+
+  #geom_violin(alpha = 0.4, show.legend = FALSE)+ 
+  geom_boxplot(width=0.5, colour = "black", alpha=0.7 , show.legend = FALSE) +
+  stat_summary(fun.data=mean_se, fun.args = list(mult = 1),
+               geom="pointrange", color="black",
+               shape = 18, size = 0.75,
+               position = position_dodge(width = 0.9))+
+  geom_jitter(shape = 21,size=2,color="black",alpha=1.0 , show.legend = FALSE)+
+  scale_fill_manual(values=c("#05445E","#b84b00"))+
+  coord_fixed(ratio =3.5)  +
+  ylim(0, 1) +
+  geom_hline(yintercept=.40, linetype="dashed")+
+  labs(x = "Modality", y = "Proportion of Correct Transfer Test Responses")+
+theme(
+         panel.background = element_rect(fill='transparent'),
+         plot.background = element_rect(fill='transparent', color=NA),
+         panel.grid.major = element_blank(),
+         panel.grid.minor = element_blank(),
+         legend.background = element_rect(fill='transparent'),
+         legend.box.background = element_rect(fill='transparent')
+       )+
+  theme(legend.position = "none")+  
+  scale_x_discrete(labels=c('Audio', 'Audiovisual'))+
+  theme(text = element_text(face = "bold", size = 12)) +
+  theme(axis.text.x = element_text(angle = 0, vjust = 1, hjust=.5,face = "bold", size = 12, color = "black"))
+
+ggsave("transferchance.png", dpi = 300, path = ".")
+```
+
+```{r cosine similarity analysis}
+
+cosine_sim <- read.delim("./data/cosine_sim.txt")
+
+#average the image cosine sims and create new column 
+cosine_sim$newmean <- rowMeans(cosine_sim[ , c(2, 3)], na.rm = TRUE)
+
+#calculate cosine mean of audio evaporation condition 
+sim_audio <- cosine_sim[cosine_sim$condition == "audio", ]
+sim_evap <- sim_audio[sim_audio$process == "evap", ]
+sim_evap_audio <- tapply(sim_evap$newmean, sim_evap$subid, mean)
+print(sim_evap_audio)
+sd(sim_evap_audio)
+
+#calculate cosine mean of audio precipitation condition 
+sim_audio_p <- cosine_sim[cosine_sim$condition == "audio", ]
+sim_precip <- sim_audio_p[sim_audio_p$process == "precip", ]
+sim_precip_audio <- tapply(sim_precip$newmean, sim_precip$subid, mean)
+print(sim_precip_audio)
+sd(sim_precip_audio)
+
+#calculate cosine mean of audiovisual evaporation condition - 23
+sim_av <- cosine_sim[cosine_sim$condition == "av", ]
+sim_evap_av <- sim_av[sim_av$process == "evap", ]
+sim_evap_av <- tapply(sim_evap_av$newmean, sim_evap_av$subid, mean)
+print(sim_evap_av)
+sd(sim_evap_av)
+
+#calculate cosine mean of audiovisual precipitation condition = 21
+sim_av_p <- cosine_sim[cosine_sim$condition == "av", ]
+sim_precip_av <- sim_av_p[sim_av_p$process == "precip", ]
+sim_precip_av <- tapply(sim_precip_av$newmean, sim_precip_av$subid, mean)
+print(sim_precip_av)
+sd(sim_precip_av)
+
+
+#t-test for precipitation question by condition 
+#subset by precipitation
+sim_precip <- cosine_sim[cosine_sim$process == "precip", ]
+
+#check for unequal variances - result:equal variances 
+var_lev_p <- leveneTest(newmean~ condition, data = sim_precip )
+print(var_lev_p)
+
+#t-test by condition precip 
+t.test(sim_precip_audio, sim_precip_av, var.equal = TRUE)
+
+#check for unequal variances - result:equal variances 
+sim_evap <- cosine_sim[cosine_sim$process == "evap", ]
+var_lev_e <- leveneTest(newmean~ condition, data = sim_evap )
+print(var_lev_e)
+
+#t-test by condition evap 
+t.test(sim_evap_audio, sim_evap_av, var.equal = TRUE)
+
+#creating a multi-panel plot 
+library(patchwork)
+plots_study1 <- overall + recall + transfer
+print(plots_study1)
+
+ggsave("bigplots_study1.svg")
+
+```
+#id 113 evaporation new mean is an extreme outlier 

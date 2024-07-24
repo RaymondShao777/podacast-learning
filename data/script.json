@@ -1,0 +1,48 @@
+{
+    "evaDef": {
+        "Sen 1": "When the heat from the Sun reaches these ponds, lakes, and oceans, it turns the water into a gas in a process called evaporation!",
+        "Sen 2": "Anything that heats up water can create water vapor through evaporation",
+        "Sen 3": "we know there are so many ways that water can turn into water vapor.",
+        "Sen 4": "the rain evaporates from the ground to the sky",
+        "Sen 5": "Now, this water vapor floats up into the sky.",
+        "Sen 6": "When water has already fallen to Earth, it gets heated up."
+    },
+    "evaExample": {
+        "Evap Ex 1": "After it rains, I get these puddles around my house. After some time, they disappear. Has that puddle turned into gas?",
+        "Evap Ex 2": "These puddles have just a tiny bit of water, so all of it turns into gas!",
+        "Evap Ex 3": "Have you ever noticed that the air is very warm and kind of wet after taking a hot shower?",
+        "Evap Ex 4": "It can be from a hot shower, a hair dryer, or even the kitchen stove!",
+        "Evap Ex 5": "All you need is a plastic ziploc bag, water, markers, tape, and some blue food coloring. You create your own water cycle in the plastic bag and tape it to a window that gets lots of sun. Then as the sun warms the water in the plastic bag, you will be able to see precipitation, evaporation, and condensation all right there in the plastic bag!"
+    },
+    "evaPic": {
+        "Evap Image 1": "The image illustrates a sun with a content expression above a body of water, with arrows and blue dots ascending from the waves to represent the process of evaporation. Below the arrows, a vibrant green and pink fish is swimming, adding a lively element to the depiction of the water cycle.",
+        "Evap Image 2": "The illustration shows a showerhead with water spraying out, and blue droplets mixed with steam are rising, indicated by upward arrows, to represent the process of evaporation. To the right, a hanging purple loofah adds a touch of household familiarity to the scene."
+    },
+    "preDef": {
+        "Sen 1": "Precipitation occurs when the clouds in the sky fill up with liquid water and get too heavy",
+        "Sen 2": "That liquid water falls out of the clouds and onto Earth!",
+        "Sen 3": "So it rains from the clouds to the ground"
+    },
+    "preExample": {
+        "Precip Ex 1": " I'm pretty sure that it has something to do with clouds - I think that's why rain is one of the first things I thought of",
+        "Precip Ex 2": "Like if I was lifting a really heavy box and it got so heavy that it slipped right out of my hands and fell to the floor.",
+        "Precip Ex 3": "If the water falling from the cloud is frozen solid, then that would make snow or hail, right?",
+        "Precip Ex 4": "There is also mist, which is really just a light rain.",
+        "Precip Ex 5": "Water can fall to Earth in the form of rain, mist, snow, hail, and even another type of frozen water called sleet, which looks like little ice pieces.",
+        "Precip Ex 6": "All you need is a plastic ziploc bag, water, markers, tape, and some blue food coloring. You create your own water cycle in the plastic bag and tape it to a window that gets lots of sun. Then as the sun warms the water in the plastic bag, you will be able to see precipitation, evaporation, and condensation all right there in the plastic bag!"
+    },
+    "prePic": {
+        "Precip Image 1": "The image features three grey clouds set against a pale blue background, each demonstrating different forms of precipitation: falling snowflakes, hailstones, and raindrops. A colorful yellow and purple umbrella is depicted open at the bottom of the frame, implying the need for protection from the various types of descending precipitation.",
+        "Precip Image 2": "The image presents a single dark cloud from which blue raindrops are falling, illustrated with both droplets and streaks to depict a shower of rain. Below the cloud, a brown teddy bear sits on the ground, appearing to be in the path of the falling rain, adding an element of charm to the scene."
+    },
+    "Questions": {
+        "Question 1": "What is it called when the sun heats up water, turning the water into water vapor and the water vapor rises into the air?",
+        "Question 2": "When we are cooking pasta, we boil the water first in a pot. When the water is boiled, it creates steam or water vapor.",
+        "Question 3": "What is it called when clouds get heavy and can't hold anymore liquid water and the liquid water falls to the ground?",
+        "Question 4": "When do you think we would most likely see precipitation like rain or snow?",
+        "Question 5": "On a cloudy day where there are lots of clouds in the sky or a sunny day when there are no clouds in the sky?",
+        "Question 6": "What is it called when water vapor gets cold, turns into a liquid, and then turns into a cloud?",
+        "Question 7": "When it is hot outside and we are drinking a cold drink from a glass, sometimes water droplets form on the outside of the glass.",
+        "Question 8": "What is it called when trees release water vapor?"
+    }
+}
